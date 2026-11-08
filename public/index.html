@@ -1,1 +1,374 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monitoring Bon Sementara</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f8fafc;color:#0f172a;font-family:Arial,Helvetica,sans-serif;font-size:14px}
+.wrap{max-width:1320px;margin:0 auto;padding:16px}
+.hide{display:none!important}
+.head{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.topbar{flex:1 1 520px;background:#1e3a8a;padding:12px 18px;border-radius:6px}
+.topbar .t{font-size:19px;font-weight:700;letter-spacing:.4px;color:#fff}
+.topbar .s{font-size:12px;color:#dbe4ff}
+.acts{display:flex;gap:8px}
+.btn{background:#1e3a8a;color:#fff;border:0;font:inherit;font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#162d6b}
+.msg{background:#fff;border:1px solid #d5dbe5;border-radius:6px;padding:16px;font-weight:600}
+.msg.err{background:#fef2f2;border-color:#fca5a5;color:#7f1d1d}
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.filters>div{flex:1 1 200px;min-width:170px}
+.filters label{display:block;font-size:13px;font-weight:700;margin-bottom:3px}
+.filters select,.filters input{width:100%;padding:8px 10px;border:1px solid #64748b;border-radius:6px;background:#fff;color:#0f172a;font:inherit}
+.kpis{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.kpi{flex:1 1 190px;background:#fff;border:1px solid #d5dbe5;border-top:3px solid #1e3a8a;border-radius:4px;padding:6px 10px}
+.kpi .l{font-size:10.5px;font-weight:700;color:#475569;letter-spacing:.4px}
+.kpi .v{font-size:17px;font-weight:700;line-height:1.3}
+.kpi .n{font-size:11px;color:#475569;min-height:14px}
+.kpi.m{border-top-color:#b91c1c;background:#fef2f2}.kpi.m .v{color:#b91c1c}
+.strip{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 10px}
+.strip span{background:#fff;border:1px solid #d5dbe5;border-radius:4px;padding:4px 10px;font-size:12px;color:#334155;font-weight:700}
+.strip b{color:#0f172a;margin-left:4px}
+.alarm{background:#fef2f2;border:1px solid #fca5a5;border-left:5px solid #b91c1c;color:#7f1d1d;border-radius:4px;padding:9px 14px;margin:4px 0 10px}
+.aman{background:#ecfdf3;border:1px solid #86efac;color:#14532d;border-radius:4px;padding:8px 14px;font-weight:700}
+.bagian{font-size:14px;font-weight:700;letter-spacing:.4px;margin:18px 0 6px;padding-bottom:4px;border-bottom:2px solid #1e3a8a}
+.legend{font-size:12px;color:#334155;margin:4px 0 6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin:0 4px 0 10px}
+.tbl{overflow-x:auto;border:1px solid #d5dbe5;border-radius:6px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{background:#1e3a8a;color:#fff;text-align:left;padding:8px 10px;white-space:nowrap}
+td{padding:7px 10px;border-top:1px solid #e2e8f0;white-space:nowrap}
+tr.m td{background:#fee2e2;color:#7f1d1d;font-weight:700}
+tr.h td{background:#dcfce7;color:#14532d}
+tr.k td{background:#fef3c7;color:#78350f;font-weight:700}
+.foot{text-align:center;color:#334155;font-size:12px;margin:30px 0 6px;padding-top:10px;border-top:1px solid #cbd5e1}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;z-index:9}
+.kotak{background:#fff;border-radius:10px;padding:22px;width:min(360px,92vw)}
+.kotak input{width:100%;padding:10px;border:1px solid #64748b;border-radius:6px;font:inherit;margin:10px 0}
+.printonly{display:none}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  .acts,.filters,#pesan,.overlay{display:none!important}
+  .printonly{display:block;font-size:11px;margin:0 0 8px}
+  body{background:#fff;font-size:10px}.wrap{padding:0;max-width:none}
+  table{font-size:9px}th,td{padding:3px 5px;white-space:normal}
+  .tbl{overflow:visible;border:0}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .bagian{break-after:avoid}tr{break-inside:avoid}
+}
+</style>
+<meta name="robots" content="noindex">
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="topbar"><div class="t">MONITORING BON SEMENTARA</div><div class="s" id="sub">Memuat...</div></div>
+    <div class="acts">
+      <button class="btn" onclick="muat(true)">Muat ulang</button>
+      <button class="btn" onclick="cetak()">Unduh PDF</button>
+      <button class="btn" onclick="unduhCsv()">Unduh CSV</button>
+    </div>
+  </div>
+  <div id="pesan" class="msg">Memuat data...</div>
+  <div id="isi" class="hide">
+    <div id="printinfo" class="printonly"></div>
+    <div class="filters">
+      <div><label for="fPeriode">Periode</label><select id="fPeriode" onchange="gantiPeriode()"></select></div>
+      <div><label for="fReg">Regional</label><select id="fReg" onchange="ubah()"></select></div>
+      <div><label for="fFra">FRA</label><select id="fFra" onchange="ubah()"></select></div>
+      <div><label for="fStore">Store</label><select id="fStore" onchange="ubah()"></select></div>
+      <div><label for="fStatus">Status</label><select id="fStatus" onchange="ubah()"></select></div>
+      <div><label for="fCari">Cari ID / nama / NIP</label><input id="fCari" oninput="tunda()" placeholder="Ketik untuk mencari"></div>
+    </div>
+    <div id="alarm"></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="strip" id="strip"></div>
+    <div class="bagian" id="jG"></div><div id="tG"></div>
+    <div class="bagian">RINGKASAN PER STORE</div><div id="tR"></div>
+    <div class="bagian">DAFTAR BON (TERBARU DI ATAS)</div>
+    <div class="legend"><i style="background:#fecaca"></i>Merah: gantung lebih dari 24 jam<i style="background:#bbf7d0"></i>Hijau: sudah dicairkan, belum direalisasi (masih dalam 24 jam)<i style="background:#fde68a"></i>Kuning: realisasi lebih dari 24 jam (tidak sesuai WI)</div>
+    <div id="tD"></div><div class="legend" id="catD"></div>
+  </div>
+  <div class="foot">Powered and developed by M Khadafi</div>
+</div>
+<div id="pinbox" class="overlay hide"><div class="kotak"><b>Dashboard memakai PIN</b>
+  <input id="pinIn" type="password" placeholder="Masukkan PIN" onkeydown="if(event.key==='Enter')kirimPin()">
+  <button class="btn" onclick="kirimPin()">Masuk</button></div></div>
 
+<script>
+/*LOGIC-START*/
+var STATUS_LIST = ['Diajukan', 'Disetujui', 'Dicairkan', 'Direalisasi', 'Selesai', 'Ditolak'];
+function p2(n) { return ('0' + n).slice(-2); }
+function bulanWIB(ms) { if (!ms) return ''; var d = new Date(ms + 25200000); return d.getUTCFullYear() + '-' + p2(d.getUTCMonth() + 1); }
+function fmtTgl(ms) {
+  if (!ms) return '';
+  var d = new Date(ms + 25200000);
+  return p2(d.getUTCDate()) + '/' + p2(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear() + ' ' + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes());
+}
+function rp(n) { n = Math.round(n || 0); return 'Rp ' + (n < 0 ? '-' : '') + String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+function uniq(a) { var o = {}, r = []; a.forEach(function (x) { if (!o[x]) { o[x] = 1; r.push(x); } }); return r; }
+function jumlah(a, f) { return a.reduce(function (s, r) { return s + f(r); }, 0); }
+
+function olah(arr, master, now, batas, blokir) {
+  var B = batas * 3600000;
+  return arr.map(function (a) {
+    var r = { id: a[0], tA: a[1], store: a[2], nip: a[3], nama: a[4], kep: a[5], nom: a[6], st: a[7], appr: a[8],
+      cash: a[9], tC: a[10], tR: a[11], nomR: a[12], sisa: a[13], tS: a[14], foto: a[15] };
+    var m = master[r.store] || {};
+    r.nm = m.nama || ''; r.fra = m.fra || ''; r.reg = m.regional || '';
+    r.label = r.nm ? r.store + ' - ' + r.nm : r.store;
+    r.bln = bulanWIB(r.tA);
+    var dic = r.st === 'Dicairkan' && r.tC > 0;
+    r.jam = dic ? Math.floor((now - r.tC) / 3600000) : 0;
+    r.gantung = dic && r.jam >= batas;
+    r.macet = dic && r.jam >= blokir;
+    var ada = r.tC > 0 && r.tR > 0;
+    r.lamaReal = ada ? Math.floor((r.tR - r.tC) / 3600000) : 0;
+    r.terlambat = ada && (r.tR - r.tC) > B;
+    return r;
+  });
+}
+function tanda(r) {
+  if (r.gantung) return 'GANTUNG ' + r.jam + ' JAM' + (r.macet ? ', STORE TERKUNCI' : '');
+  if (r.st === 'Dicairkan') return 'Belum realisasi (' + r.jam + ' jam)';
+  if (r.terlambat) return 'Terlambat realisasi (' + r.lamaReal + ' jam)';
+  return '';
+}
+function warna(r) { return r.gantung ? 'm' : (r.st === 'Dicairkan' ? 'h' : (r.terlambat ? 'k' : '')); }
+
+function saring(rows, f, periode) {
+  var regList = uniq(rows.map(function (r) { return r.reg; })).filter(Boolean).sort();
+  var reg = regList.indexOf(f.reg) >= 0 ? f.reg : '';
+  var d0 = reg ? rows.filter(function (r) { return r.reg === reg; }) : rows;
+  var fraList = uniq(d0.map(function (r) { return r.fra; })).filter(Boolean).sort();
+  var fra = fraList.indexOf(f.fra) >= 0 ? f.fra : '';
+  if (fra) d0 = d0.filter(function (r) { return r.fra === fra; });
+  var lbl = {}; d0.forEach(function (r) { lbl[r.store] = r.label; });
+  var storeList = Object.keys(lbl).sort();
+  var store = lbl[f.store] ? f.store : '';
+  var dasar = store ? d0.filter(function (r) { return r.store === store; }) : d0;
+  var q = (f.q || '').trim().toLowerCase();
+  if (q) dasar = dasar.filter(function (r) { return (r.id + ' ' + r.nama + ' ' + r.nip + ' ' + r.kep).toLowerCase().indexOf(q) >= 0; });
+  var per = dasar.filter(function (r) { return r.bln === periode; });
+  var cair = per.filter(function (r) { return r.st === 'Dicairkan' || r.st === 'Direalisasi' || r.st === 'Selesai'; });
+  var blm = per.filter(function (r) { return r.st === 'Dicairkan'; });
+  var gantung = dasar.filter(function (r) { return r.gantung; }).sort(function (a, b) { return b.jam - a.jam; });
+  var kunci = uniq(gantung.filter(function (r) { return r.macet; }).map(function (r) { return r.store; })).sort();
+  var status = STATUS_LIST.indexOf(f.status) >= 0 ? f.status : '';
+  var det = status ? per.filter(function (r) { return r.st === status; }) : per;
+  var cnt = {}; per.forEach(function (r) { cnt[r.st] = (cnt[r.st] || 0) + 1; });
+  var g = {};
+  per.forEach(function (r) {
+    var x = g[r.store] || (g[r.store] = { label: r.label, fra: r.fra, reg: r.reg, n: 0, dia: 0, cair: 0, blm: 0, gantung: 0, macet: 0, selesai: 0 });
+    x.n++; x.dia += r.nom;
+    if (r.st === 'Dicairkan' || r.st === 'Direalisasi' || r.st === 'Selesai') x.cair += r.nom;
+    if (r.st === 'Dicairkan') x.blm += r.nom;
+    if (r.st === 'Selesai') x.selesai++;
+  });
+  gantung.forEach(function (r) { if (g[r.store]) { g[r.store].gantung++; if (r.macet) g[r.store].macet++; } });
+  var rk = Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return (b.gantung - a.gantung) || (b.blm - a.blm); });
+  return { reg: reg, fra: fra, store: store, status: status, q: f.q || '', regList: regList, fraList: fraList,
+    storeList: storeList.map(function (k) { return [k, lbl[k]]; }), dasar: dasar, per: per, cair: cair, blm: blm,
+    gantung: gantung, kunci: kunci, det: det, cnt: cnt, rk: rk, terlambat: per.filter(function (r) { return r.terlambat; }).length };
+}
+/*LOGIC-END*/
+
+var S = { rows: [], master: {}, d: null, pin: '', skew: 0, periode: '', cfg: { batas: 24, blokir: 24 }, cur: '', all: false, ready: false, timer: null };
+try { S.pin = sessionStorage.getItem('dpin') || ''; } catch (e) {}
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function pesan(t, err) { var p = $('pesan'); p.textContent = t; p.className = 'msg' + (err ? ' err' : ''); p.classList.remove('hide'); }
+
+/*DATA-START*/
+var BATAS_JAM = 24, BLOKIR_JAM = 24;   // samakan dengan aturan aplikasi bon
+var coba = 0;
+function blnSekarang() { var d = new Date(Date.now() + 25200000); return d.getUTCFullYear() + '-' + p2(d.getUTCMonth() + 1); }
+function bulanList() {
+  var d = new Date(Date.now() + 25200000), y = d.getUTCFullYear(), m = d.getUTCMonth() + 1, out = [];
+  for (var i = 0; i < 12; i++) { out.push(y + '-' + p2(m)); m--; if (m === 0) { y--; m = 12; } }
+  return out;
+}
+function csvParse(t) {
+  var rows = [], row = [], f = '', q = false, i = t.charCodeAt(0) === 0xFEFF ? 1 : 0, n = t.length;
+  for (; i < n; i++) {
+    var c = t.charAt(i);
+    if (q) { if (c === '"') { if (t.charAt(i + 1) === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n') { row.push(f); rows.push(row); row = []; f = ''; }
+    else if (c !== '\r') f += c;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  return rows;
+}
+function jadiObjek(rows) {
+  if (!rows.length) return [];
+  var h = rows[0].map(function (x) { return String(x).trim(); });
+  return rows.slice(1).filter(function (r) { return r.length > 1 && String(r[0]).trim(); }).map(function (r) {
+    var o = {}; h.forEach(function (k, j) { o[k] = r[j] == null ? '' : r[j]; }); return o;
+  });
+}
+function tebakDayfirst(objs) {
+  var a12 = false, b12 = false;
+  for (var i = 0; i < objs.length && i < 3000; i++) {
+    ['TglAjuan', 'TglCair', 'TglRealisasi'].forEach(function (k) {
+      var m = /^(\d{1,2})\/(\d{1,2})\/\d{4}/.exec(objs[i][k] || '');
+      if (m) { if (+m[1] > 12) a12 = true; if (+m[2] > 12) b12 = true; }
+    });
+  }
+  return a12 || !b12;
+}
+function tglMs(s, df) {
+  s = String(s || '').trim(); if (!s) return 0;
+  var m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(s), y, mo, d;
+  if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else {
+    m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(s);
+    if (!m) return 0;
+    y = +m[3]; if (df) { d = +m[1]; mo = +m[2]; } else { mo = +m[1]; d = +m[2]; }
+  }
+  return Date.UTC(y, mo - 1, d, +m[4] || 0, +m[5] || 0, +m[6] || 0) - 25200000;   // waktu Sheet = WIB (UTC+7)
+}
+function ang(v) { v = String(v || '').replace(/[^\d-]/g, ''); return v && v !== '-' ? Number(v) : 0; }
+function kompak(o, df) {
+  return [o.ID, tglMs(o.TglAjuan, df), String(o.Store || '').trim().toUpperCase(), String(o.NIP || '').trim(), o.Nama, o.Keperluan, ang(o.Nominal),
+    String(o.Status || '').trim(), o.Approver || '', o.Cashier || '', tglMs(o.TglCair, df), tglMs(o.TglRealisasi, df),
+    ang(o.NominalRealisasi), ang(o.Sisa), tglMs(o.TglSelesai, df), String(o.FotoID || '').trim() ? 1 : 0];
+}
+function cariKol(h, kunci) {
+  for (var a = 0; a < kunci.length; a++) for (var j = 0; j < h.length; j++) if (h[j].indexOf(kunci[a]) >= 0) return j;
+  return -1;
+}
+function petaMaster(rows) {
+  var map = {};
+  if (rows.length < 2) return map;
+  var h = rows[0].map(function (x) { return String(x).toLowerCase(); });
+  var ik = cariKol(h, ['kode']); if (ik < 0) ik = 0;
+  var inm = cariKol(h, ['nama store', 'nama toko', 'toko']), ifr = cariKol(h, ['fra']), irg = cariKol(h, ['regional', 'region']);
+  rows.slice(1).forEach(function (r) {
+    var k = String(r[ik] || '').trim().toUpperCase();
+    if (k) map[k] = { nama: inm >= 0 ? String(r[inm] || '').trim() : '', fra: ifr >= 0 ? String(r[ifr] || '').trim() : '', regional: irg >= 0 ? String(r[irg] || '').trim() : '' };
+  });
+  return map;
+}
+function gabungData(bonCsv, arsipCsv) {
+  var bon = jadiObjek(csvParse(bonCsv)), ars = arsipCsv ? jadiObjek(csvParse(arsipCsv)) : [];
+  if (bon.length && !('ID' in bon[0] && 'Status' in bon[0] && 'TglCair' in bon[0])) throw new Error('Kolom tab Bon tidak lengkap. Pastikan yang diterbitkan adalah tab Bon versi terbaru.');
+  var df = tebakDayfirst(bon.concat(ars)), lihat = {}, data = [];
+  bon.concat(ars).forEach(function (o) { if (!o.ID || lihat[o.ID]) return; lihat[o.ID] = 1; data.push(kompak(o, df)); });
+  return data;
+}
+/*DATA-END*/
+
+function ulang(t, paksa) {
+  if (coba < 3) {
+    coba++;
+    pesan('Server sedang sibuk, mencoba lagi (' + coba + '/3)...');
+    setTimeout(function () { muat(paksa); }, 1000 + Math.random() * 3000);
+  } else { pesan(t, true); }
+}
+function ambil(path, opsional) {
+  var u = path + (path.indexOf('?') < 0 ? '?' : '&') + 't=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
+  return fetch(u).then(function (r) {
+    if (r.status === 401) { var e = new Error('PIN'); e.pin = true; throw e; }
+    if (r.status === 204) return '';
+    if (!r.ok) return r.text().then(function (t) { throw new Error(t || ('Kode ' + r.status)); });
+    return r.text();
+  }).catch(function (e) { if (opsional && !e.pin) return ''; throw e; });
+}
+function muat(paksa) {
+  if (!S.ready) pesan('Memuat data...');
+  var bln = S.periode || blnSekarang();
+  Promise.all([ambil('/api/bon'), ambil('/api/master', true), ambil('/api/arsip?bln=' + bln, true)]).then(function (h) {
+    var data = gabungData(h[0], h[2]), master = petaMaster(csvParse(h[1] || ''));
+    coba = 0;
+    S.skew = 0; S.cfg = { batas: BATAS_JAM, blokir: BLOKIR_JAM }; S.cur = blnSekarang(); S.periode = bln;
+    S.master = master; S.dibuat = Date.now(); S.d = {}; S.raw = data;
+    S.rows = olah(data, master, Date.now(), BATAS_JAM, BLOKIR_JAM);
+    isiPeriode(bulanList());
+    S.ready = true; $('pesan').classList.add('hide'); $('isi').classList.remove('hide');
+    render();
+  }).catch(function (e) {
+    if (e.pin) { $('pinbox').classList.remove('hide'); pesan('Masukkan PIN dashboard.', true); return; }
+    ulang('Data tidak bisa dibaca: ' + e.message, paksa);
+  });
+}
+function kirimPin() { S.pin = $('pinIn').value; try { sessionStorage.setItem('dpin', S.pin); } catch (e) {} $('pinbox').classList.add('hide'); muat(false); }
+function gantiPeriode() { S.periode = $('fPeriode').value; S.ready = false; $('isi').classList.add('hide'); muat(false); }
+function isiPeriode(list) { $('fPeriode').innerHTML = list.map(function (b) { return '<option value="' + b + '"' + (b === S.periode ? ' selected' : '') + '>' + b + '</option>'; }).join(''); }
+
+function filt() { return { reg: $('fReg').value, fra: $('fFra').value, store: $('fStore').value, status: $('fStatus').value, q: $('fCari').value }; }
+var tm = null; function tunda() { clearTimeout(tm); tm = setTimeout(render, 250); }
+function ubah() { render(); }
+function opsi(sel, semua, list, pilih) {
+  $(sel).innerHTML = '<option value="">' + semua + '</option>' + list.map(function (x) {
+    var v = Array.isArray(x) ? x[0] : x, t = Array.isArray(x) ? x[1] : x;
+    return '<option value="' + esc(v) + '"' + (v === pilih ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('');
+}
+function tbl(kol, baris) {
+  return '<div class="tbl"><table><tr>' + kol.map(function (k) { return '<th>' + esc(k) + '</th>'; }).join('') + '</tr>' +
+    baris.map(function (b) { return '<tr class="' + b.k + '">' + b.c.map(function (c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table></div>';
+}
+function kpi(l, v, n, m) { return '<div class="kpi' + (m ? ' m' : '') + '"><div class="l">' + esc(l) + '</div><div class="v">' + esc(v) + '</div><div class="n">' + esc(n) + '</div></div>'; }
+function barisDet(r) {
+  return { k: warna(r), c: [r.id, fmtTgl(r.tA), r.label, r.fra, r.reg, r.nip, r.nama, r.kep, rp(r.nom), r.st, tanda(r), r.appr, r.cash,
+    fmtTgl(r.tC), fmtTgl(r.tR), r.tR ? rp(r.nomR) : '', r.tR ? rp(r.sisa) : '', fmtTgl(r.tS), r.foto ? 'Ada' : '-'] };
+}
+var KOL_DET = ['ID Bon', 'Tgl Ajuan', 'Store', 'FRA', 'Regional', 'NIP', 'Nama Staff', 'Keperluan', 'Nominal', 'Status', 'Tanda', 'Disetujui Oleh', 'Dicairkan Oleh', 'Waktu Cair', 'Waktu Realisasi', 'Terpakai', 'Sisa/(Kurang)', 'Selesai', 'Foto'];
+
+function render() {
+  var h = saring(S.rows, filt(), S.periode), B = S.cfg.batas, K = Math.round(S.cfg.blokir / 24);
+  S.h = h;
+  opsi('fReg', 'SEMUA REGIONAL', h.regList, h.reg); opsi('fFra', 'SEMUA FRA', h.fraList, h.fra);
+  opsi('fStore', 'SEMUA STORE', h.storeList, h.store); opsi('fStatus', 'SEMUA STATUS', STATUS_LIST, h.status);
+  var gt = jumlah(h.gantung, function (r) { return r.nom; });
+  $('alarm').innerHTML =
+    (h.gantung.length ? '<div class="alarm"><b>PERHATIAN:</b> ' + h.gantung.length + ' bon gantung lebih dari ' + B + ' jam, total ' + esc(rp(gt)) + '. Mohon segera ditindaklanjuti.</div>' : '') +
+    (h.kunci.length ? '<div class="alarm"><b>STORE TERKUNCI:</b> ' + h.kunci.length + ' store tidak bisa mengajukan bon baru karena ada bon belum direalisasi lebih dari ' + K + ' x 24 jam: ' + esc(h.kunci.join(', ')) + '. Manager mohon tindak lanjut.</div>' : '');
+  $('kpis').innerHTML = kpi('JUMLAH BON', String(h.per.length).replace(/\B(?=(\d{3})+(?!\d))/g, '.'), 'periode terpilih', false) +
+    kpi('TOTAL DIAJUKAN', rp(jumlah(h.per, function (r) { return r.nom; })), '', false) +
+    kpi('TOTAL DICAIRKAN', rp(jumlah(h.cair, function (r) { return r.nom; })), h.cair.length + ' bon', false) +
+    kpi('BELUM DIREALISASI', rp(jumlah(h.blm, function (r) { return r.nom; })), h.blm.length + ' bon', false) +
+    kpi('GANTUNG > ' + B + ' JAM', String(h.gantung.length), 'semua periode', h.gantung.length > 0);
+  var st = [['MENUNGGU APPROVAL', 'Diajukan'], ['MENUNGGU PENCAIRAN', 'Disetujui'], ['MENUNGGU VERIFIKASI', 'Direalisasi'], ['SELESAI', 'Selesai'], ['DITOLAK', 'Ditolak'], ['KEDALUWARSA', 'Kedaluwarsa']];
+  $('strip').innerHTML = st.map(function (x) { return '<span>' + x[0] + '<b>' + (h.cnt[x[1]] || 0) + '</b></span>'; }).join('') +
+    '<span>REALISASI TERLAMBAT<b>' + h.terlambat + '</b></span><span>STORE TERKUNCI<b>' + h.kunci.length + '</b></span>';
+  $('jG').textContent = 'BON GANTUNG (BELUM DIREALISASI LEBIH DARI ' + B + ' JAM)';
+  $('tG').innerHTML = h.gantung.length ? tbl(['Store', 'FRA', 'Regional', 'ID Bon', 'NIP', 'Nama Staff', 'Keperluan', 'Nominal', 'Dicairkan Oleh', 'Waktu Cair', 'Lama'],
+    h.gantung.map(function (r) { return { k: 'm', c: [r.label, r.fra, r.reg, r.id, r.nip, r.nama, r.kep, rp(r.nom), r.cash, fmtTgl(r.tC), r.jam + ' jam'] }; }))
+    : '<div class="aman">Tidak ada bon yang melewati ' + B + ' jam.</div>';
+  $('tR').innerHTML = h.rk.length ? tbl(['Store', 'FRA', 'Regional', 'Jumlah Bon', 'Total Diajukan', 'Total Dicairkan', 'Belum Direalisasi', 'Bon Gantung', 'Selesai', 'Pengajuan Bon'],
+    h.rk.map(function (x) { return { k: x.gantung > 0 ? 'm' : '', c: [x.label, x.fra, x.reg, x.n, rp(x.dia), rp(x.cair), rp(x.blm), x.gantung, x.selesai, x.macet > 0 ? 'TERKUNCI' : 'Normal'] }; }))
+    : '<p>Belum ada data pada periode ini.</p>';
+  var maks = S.all ? 1500 : 500;
+  $('tD').innerHTML = h.det.length ? tbl(KOL_DET, h.det.slice(0, maks).map(barisDet)) : '<p>Tidak ada bon sesuai filter.</p>';
+  $('catD').textContent = h.det.length > maks ? 'Menampilkan ' + maks + ' dari ' + h.det.length + ' bon. Persempit dengan filter, atau unduh CSV untuk data lengkap.' : '';
+  var wkt = new Date(Date.now() + S.skew);
+  $('sub').textContent = 'Data disegarkan otomatis. Dimuat ' + fmtTgl(wkt.getTime()) + ' WIB, data dibuat ' + fmtTgl(S.dibuat) + ' WIB';
+  $('printinfo').textContent = 'Periode: ' + S.periode + ' | Regional: ' + (h.reg || 'SEMUA') + ' | FRA: ' + (h.fra || 'SEMUA') + ' | Store: ' + (h.store ? (S.h.storeList.filter(function (x) { return x[0] === h.store; })[0] || [0, h.store])[1] : 'SEMUA') +
+    ' | Status: ' + (h.status || 'SEMUA') + (h.q ? ' | Pencarian: ' + h.q : '') + ' | Dicetak ' + fmtTgl(wkt.getTime()) + ' WIB';
+}
+
+function cetak() {
+  S.all = true; render();
+  setTimeout(function () { try { window.print(); } catch (e) { pesan('Cetak tidak tersedia di peramban ini. Buka dashboard di tab baru lalu cetak (Ctrl+P).', true); } S.all = false; setTimeout(render, 300); }, 200);
+}
+function csvSel(v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function unduhCsv() {
+  if (!S.h) return;
+  var baris = [KOL_DET.join(',')].concat(S.h.det.map(function (r) { return barisDet(r).c.map(csvSel).join(','); }));
+  var url = URL.createObjectURL(new Blob(['\uFEFF' + baris.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  var a = document.createElement('a'); a.href = url; a.download = 'monitoring_bon_' + S.periode + '.csv';
+  document.body.appendChild(a);
+  try { a.click(); } catch (e) { window.open(url); }
+  setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+}
+
+muat(false);
+setInterval(function () { if (!document.hidden && S.ready) setTimeout(function () { muat(false); }, Math.random() * 20000); }, 300000);
+</script>
+</body>
+</html>
