@@ -1,1 +1,10 @@
+{
+  "name": "monitoring-bon-sementara",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  }
+}
 
