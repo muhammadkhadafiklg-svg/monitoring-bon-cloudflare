@@ -1,12 +1,12 @@
 {
-  "name": "monitoring-bon-cloudflare",
+  "name": "app",
   "main": "src/worker.js",
   "compatibility_date": "2024-11-08",
   "assets": {
     "directory": "public"
   },
   "vars": {
-    "BON_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzoyAo4qV7QjRWpGaFN4J5rxhFdooht-clqnhqXsIoZ4evBnEwC07zxAMvQXzGh9pPPSG6KWWmTral/pub?gid=1119584628&single=true&output=csv",
-    "ARSIP_IDS": "2026=1h8_1CSX56duuwf6JQwjouHlWRe0a50JPoYiUfqLjfRY"
+    "BON_CSV_URL": "TAUTAN_CSV_ANDA_DISINI",
+    "ARSIP_IDS": "2026=1h8_1CSX56duuwf6JQwjouHIWRe0a50JPoYiUfqLjfRY"
   }
 }
