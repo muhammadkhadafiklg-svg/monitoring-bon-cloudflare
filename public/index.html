@@ -327,30 +327,24 @@ function bagiBagian(t) {
   return out;
 }
 function ambilData(bln) {
-  var qs1 = '?t=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
-  var qs2 = '?bln=' + bln + '&t=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
+  var u = '/api/data?bln=' + bln + '&t=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
   
-  // Mengambil 3 file CSV secara bersamaan (paralel) agar 3x lebih cepat
-  return Promise.all([
-    fetch('/api/bon' + qs1),
-    fetch('/api/arsip' + qs2),
-    fetch('/api/master' + qs1)
-  ]).then(function (res) {
-    for (var i = 0; i < res.length; i++) {
-      if (res[i].status === 401) { var e = new Error('PIN'); e.pin = true; throw e; }
-      if (!res[i].ok && res[i].status !== 204) throw new Error('Data gagal dimuat (Jalur ' + i + ')');
+  return fetch(u).then(function(r) {
+    if (r.status === 401) { var e = new Error('PIN'); e.pin = true; throw e; }
+    if (!r.ok) return r.text().then(function (t) { throw new Error(t || ('Kode ' + r.status)); });
+    return r.text();
+  }).then(function(txt) {
+    // Cek apakah data sudah berformat terpisah (@@@@) atau masih CSV murni
+    if (txt.indexOf('@@@@BON@@@@') >= 0) {
+      return txt; 
+    } else {
+      // Jika Worker hanya mengirim CSV murni, kita bungkus otomatis di sini
+      // agar desain HTML yang baru ini bisa membacanya tanpa error.
+      return "\n@@@@BON@@@@\n" + txt + "\n@@@@ARSIP@@@@\n\n@@@@MASTER@@@@\n";
     }
-    return Promise.all([
-      res[0].text(),
-      res[1].status === 204 ? Promise.resolve('') : res[1].text(),
-      res[2].text()
-    ]);
-  }).then(function (txt) {
-    // Menggabungkan ketiganya agar dimengerti oleh sistem tampilan Anda
-    return "\n@@@@BON@@@@\n" + txt[0] + "\n@@@@ARSIP@@@@\n" + txt[1] + "\n@@@@MASTER@@@@\n" + txt[2];
   });
 }
-function muat(paksa) {
+  function muat(paksa) {
   if (S.memuat) return;
   S.memuat = true;
   if (!S.ready) pesan('Memuat data...');
