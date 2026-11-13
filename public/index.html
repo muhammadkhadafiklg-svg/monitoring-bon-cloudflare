@@ -90,18 +90,47 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 .tbl{scrollbar-width:thin}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .printonly{display:none}
-@media print{
-  @page{size:A4 landscape;margin:10mm}
-  .acts,.panel,#pesan,.overlay,.legend{display:none!important}
-  .printonly{display:block;font-size:11px;margin:0 0 8px}
-  body{background:#fff;font-size:10px}
-  .hero{background:#fff!important;color:#000}.hero .in{padding:0 0 8px}.brand h1{font-size:16px}.brand .s,.eyebrow{color:#334155}
-  .wrap{padding:0;max-width:none}
-  .tbl{overflow:visible;max-height:none;border:0;box-shadow:none}
-  table{font-size:9px}th,td{padding:3px 5px;white-space:normal}th{position:static}
-  .kpi,.alert,.chip{box-shadow:none}
-  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .sec{break-after:avoid}tr{break-inside:avoid}
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  
+  /* 1. Sembunyikan tombol web, filter dropdown, dan warna-warni yang tidak perlu */
+  .acts, .panel, #pesan, .overlay, .legend, .foot, .chips { display: none !important; }
+  
+  /* 2. Format Kertas dan Header Laporan */
+  body { background: #fff !important; color: #000 !important; font-size: 11px; }
+  .hero { background: #fff !important; color: #000 !important; }
+  .hero .in { padding: 0 0 10px 0; border-bottom: 2px solid #000; margin-bottom: 15px; }
+  .brand h1 { font-size: 18px; color: #000; margin: 0; }
+  .eyebrow { color: #555; }
+  .wrap { padding: 0; max-width: none; }
+  
+  /* 3. Info Kriteria Cetak (Periode, Filter) di bawah garis judul */
+  .printonly { display: block !important; font-size: 11px; margin-bottom: 15px; font-weight: bold; color: #000; }
+  
+  /* 4. Rapikan Tabel Utama menjadi Garis Hitam Tegas (Laporan Resmi) */
+  .tbl { overflow: visible !important; max-height: none !important; border: none; box-shadow: none; margin-bottom: 20px; }
+  table { border-collapse: collapse; width: 100%; font-size: 10.5px; border: 1px solid #000; }
+  th { position: static; background: #e2e8f0 !important; color: #000; border: 1px solid #000 !important; padding: 6px; font-weight: bold; text-align: left; }
+  td { border: 1px solid #000 !important; padding: 5px; white-space: normal; color: #000 !important; word-wrap: break-word; }
+  
+  /* 5. Bersihkan warna baris web agar hemat tinta/rapi di PDF */
+  tr.m td, tr.h td, tr.k td, tr.b td { background: transparent !important; box-shadow: none !important; }
+  .pill, .tag { background: transparent !important; color: #000 !important; padding: 0; border: none; font-weight: normal; }
+  
+  /* 6. Rapikan Kotak Indikator Angka (KPI) di atas */
+  .kpis { gap: 5px; margin-bottom: 15px; }
+  .kpi { border: 1px solid #000; box-shadow: none; padding: 8px; border-radius: 0; }
+  .kpi:before { display: none; }
+  .kpi .l { color: #000; font-size: 10px; }
+  .kpi .n { display: none; } 
+  
+  /* 7. Cegah baris tabel terpotong jelek antar halaman (Page Break) */
+  thead { display: table-header-group; } 
+  tr { break-inside: avoid; page-break-inside: avoid; }
+  .sec { break-after: avoid; page-break-after: avoid; margin: 15px 0 5px; }
+  .sec h2 { font-size: 14px; margin:0; }
+  
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 </style>
 </head>
