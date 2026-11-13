@@ -329,25 +329,28 @@ function bagiBagian(t) {
 function ambilData(bln) {
   var qs1 = '?t=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
   var qs2 = '?bln=' + bln + '&t=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
-  
-  var proses = function(r) {
-    if (r.status === 401) { var e = new Error('PIN'); e.pin = true; throw e; }
-    // Jika rute berhasil, ambil datanya. Jika rute gagal/belum ada file, diam-diam kembalikan kosong.
-    return r.ok ? r.text() : ""; 
-  };
 
-  // Menarik 3 data sekaligus secara paralel, kebal terhadap error Arsip
   return Promise.all([
-    fetch('/api/bon' + qs1).then(proses).catch(function(){ return ""; }),
-    fetch('/api/arsip' + qs2).then(proses).catch(function(){ return ""; }),
-    fetch('/api/master' + qs1).then(proses).catch(function(){ return ""; })
-  ]).then(function (txt) {
-    if (!txt[0]) throw new Error("Gagal membaca data BON utama. Pastikan link Google Sheets sudah benar.");
-    // Menggabungkan kembali semuanya untuk ditampilkan di Dasbor
-    return "\n@@@@BON@@@@\n" + txt[0] + "\n@@@@ARSIP@@@@\n" + txt[1] + "\n@@@@MASTER@@@@\n" + txt[2];
+    fetch('/api/bon' + qs1),
+    fetch('/api/arsip' + qs2).catch(function(){ return {ok: false}; }),
+    fetch('/api/master' + qs1).catch(function(){ return {ok: false}; })
+  ]).then(async function (res) {
+    if (res[0].status === 401) { var e = new Error('PIN'); e.pin = true; throw e; }
+
+    // Membaca jawaban asli dari sistem belakang (Worker)
+    var txtBon = await res[0].text();
+    
+    // JIKA GAGAL: Munculkan pesan error asli dari Worker ke layar
+    if (!res[0].ok) {
+      throw new Error("INFO SERVER: " + txtBon);
+    }
+
+    var txtArsip = res[1].ok ? await res[1].text() : "";
+    var txtMaster = res[2].ok ? await res[2].text() : "";
+
+    return "\n@@@@BON@@@@\n" + txtBon + "\n@@@@ARSIP@@@@\n" + txtArsip + "\n@@@@MASTER@@@@\n" + txtMaster;
   });
-}
-  function muat(paksa) {
+}  function muat(paksa) {
   if (S.memuat) return;
   S.memuat = true;
   if (!S.ready) pesan('Memuat data...');
