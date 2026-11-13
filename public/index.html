@@ -490,9 +490,35 @@ function cetak() {
 function csvSel(v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function unduhCsv() {
   if (!S.h) return;
-  var baris = [KOL_DET.join(',')].concat(S.h.det.map(function (r) { return barisDet(r).c.map(csvSel).join(','); }));
+  
+  // 1. Tentukan Kolom Khusus untuk Analisa (Lebih bersih dan fokus)
+  var head = ['ID Bon', 'Tgl Ajuan', 'Regional', 'FRA', 'Kode Store', 'Nama Store', 'NIP', 'Nama Staff', 'Keperluan', 'Status', 'Nominal Ajuan', 'Nominal Realisasi', 'Sisa / Selisih', 'Lama Gantung (Jam)', 'Waktu Cair', 'Waktu Realisasi'];
+  
+  // 2. Petakan data mentah (Angka dibiarkan murni TANPA 'Rp' agar bisa di-SUM / Pivot di Excel)
+  var baris = [head.join(',')].concat(S.h.det.map(function (r) {
+    return [
+      r.id,
+      fmtTgl(r.tA),
+      r.reg,
+      r.fra,
+      r.store,
+      r.nm,
+      r.nip,
+      r.nama,
+      r.kep,
+      r.st,
+      r.nom || 0,               // Angka murni
+      r.tR ? (r.nomR || 0) : 0, // Angka murni
+      r.tR ? (r.sisa || 0) : 0, // Angka murni
+      r.jam || 0,               // SLA keterlambatan dalam wujud jam (bisa dihitung rata-ratanya)
+      fmtTgl(r.tC),
+      fmtTgl(r.tR)
+    ].map(csvSel).join(',');
+  }));
+  
+  // 3. Buat dan unduh file CSV
   var url = URL.createObjectURL(new Blob(['\uFEFF' + baris.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
-  var a = document.createElement('a'); a.href = url; a.download = 'monitoring_bon_' + S.periode + '.csv';
+  var a = document.createElement('a'); a.href = url; a.download = 'Analisa_Bon_' + (S.periode || 'Semua') + '.csv';
   document.body.appendChild(a);
   try { a.click(); } catch (e) { window.open(url); }
   setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
