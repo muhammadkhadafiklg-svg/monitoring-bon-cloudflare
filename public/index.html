@@ -190,10 +190,32 @@ function jumlah(a, f) { return a.reduce(function (s, r) { return s + f(r); }, 0)
 function olah(arr, master, now, batas, blokir, batal) {
   var B = batas * 3600000;
   return arr.map(function (a) {
-    var r = { id: a[0], tA: a[1], store: a[2], nip: a[3], nama: a[4], kep: a[5], nom: a[6], st: a[7], appr: a[8],
-      cash: a[9], tC: a[10], tR: a[11], nomR: a[12], sisa: a[13], tS: a[14], foto: a[15] };
+    // Memaksa data teks menjadi huruf kapital dengan fungsi .toUpperCase()
+    var r = { 
+      id: String(a[0] || '').toUpperCase(), 
+      tA: a[1], 
+      store: String(a[2] || '').toUpperCase(), 
+      nip: String(a[3] || '').toUpperCase(), 
+      nama: String(a[4] || '').toUpperCase(), 
+      kep: String(a[5] || '').toUpperCase(), 
+      nom: a[6], 
+      st: a[7], // PENTING: Status dibiarkan aslinya karena dipakai untuk rumus warna indikator
+      appr: String(a[8] || '').toUpperCase(),
+      cash: String(a[9] || '').toUpperCase(), 
+      tC: a[10], 
+      tR: a[11], 
+      nomR: a[12], 
+      sisa: a[13], 
+      tS: a[14], 
+      foto: a[15] 
+    };
     var m = master[r.store] || {};
-    r.nm = m.nama || ''; r.fra = m.fra || ''; r.reg = m.regional || '';
+    
+    // Nama store, FRA, dan Regional dari data master juga di-kapitalkan
+    r.nm = String(m.nama || '').toUpperCase(); 
+    r.fra = String(m.fra || '').toUpperCase(); 
+    r.reg = String(m.regional || '').toUpperCase();
+    
     r.label = r.nm ? r.store + ' - ' + r.nm : r.store;
     r.bln = bulanWIB(r.tA);
     if (r.st === 'Diajukan' && r.tA > 0 && (now - r.tA) >= (batal || batas) * 3600000) r.st = 'Batal';   // tidak disetujui Manager dalam batas waktu
