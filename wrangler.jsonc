@@ -6,7 +6,7 @@
     "directory": "public"
   },
   "vars": {
-    "BON_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzoyAo4qV7QjRWpGaFN4J5rxhFdooht-clqnhqXsIoZ4evBnEwC07zxAMvQXzGh9pPPSG6KWWmTral/pub?gid=1119584628&single=true&output=csv",
+    "BON_CSV_URL": "1vTzoyAo4qV7QjRWpGaFN4J5rxhFdooht-clqnhqXsIoZ4evBnEwC07zxAMvQXzGh9pPPSG6KWWmTral/pub?output=csv",
     "ARSIP_IDS": "1h8_1CSX56duuwf6JQwjouHlWRe0a50JPoYiUfqLjfRY"
   }
 }
