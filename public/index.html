@@ -327,20 +327,24 @@ function bagiBagian(t) {
   return out;
 }
 function ambilData(bln) {
-  var u = '/api/data?bln=' + bln + '&t=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
-  return fetch(u).then(function(r) {
+  var qs1 = '?t=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
+  var qs2 = '?bln=' + bln + '&t=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
+  
+  var proses = function(r) {
     if (r.status === 401) { var e = new Error('PIN'); e.pin = true; throw e; }
-    if (!r.ok) return r.text().then(function (t) { throw new Error(t || ('Kode ' + r.status)); });
-    return r.text();
-  }).then(function(txt) {
-    // Cek apakah data sudah berformat terpisah (@@@@) atau masih CSV murni
-    if (txt.indexOf('@@@@BON@@@@') >= 0) {
-      return txt; 
-    } else {
-      // Jika Worker hanya mengirim CSV murni, kita bungkus otomatis di sini
-      // agar desain HTML yang baru ini bisa membacanya tanpa error.
-      return "\n@@@@BON@@@@\n" + txt + "\n@@@@ARSIP@@@@\n\n@@@@MASTER@@@@\n";
-    }
+    // Jika rute berhasil, ambil datanya. Jika rute gagal/belum ada file, diam-diam kembalikan kosong.
+    return r.ok ? r.text() : ""; 
+  };
+
+  // Menarik 3 data sekaligus secara paralel, kebal terhadap error Arsip
+  return Promise.all([
+    fetch('/api/bon' + qs1).then(proses).catch(function(){ return ""; }),
+    fetch('/api/arsip' + qs2).then(proses).catch(function(){ return ""; }),
+    fetch('/api/master' + qs1).then(proses).catch(function(){ return ""; })
+  ]).then(function (txt) {
+    if (!txt[0]) throw new Error("Gagal membaca data BON utama. Pastikan link Google Sheets sudah benar.");
+    // Menggabungkan kembali semuanya untuk ditampilkan di Dasbor
+    return "\n@@@@BON@@@@\n" + txt[0] + "\n@@@@ARSIP@@@@\n" + txt[1] + "\n@@@@MASTER@@@@\n" + txt[2];
   });
 }
   function muat(paksa) {
