@@ -327,7 +327,7 @@ function bagiBagian(t) {
   return out;
 }
 function ambilData(bln) {
-  var u = '/api/data?bln=' + bln + '&t=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
+  var u = 'https://script.google.com/macros/s/AKfycbx1brOMwR-zBKr9FP_yvU1hZpP-JCl4uZAD4B-4Bh22fiPy8r4_lKdinnneoJpjT0rF/exec?bln=' + bln + '&t=' + Math.floor(Date.now() / 60000) + (S.pin ? '&pin=' + encodeURIComponent(S.pin) : '');
   
   return fetch(u).then(function(r) {
     if (r.status === 401) { var e = new Error('PIN'); e.pin = true; throw e; }
