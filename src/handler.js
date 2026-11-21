@@ -1,6 +1,5 @@
 // Meneruskan data CSV dari Google Sheet dengan cache di server tepi Cloudflare.
-// Mendukung BON_CSV_URL (tab Data Bon), ARSIP_CSV_URL (tab Arsip) atau ARSIP_IDS, serta MASTER_CSV_URL / MASTER_ID.
-const MASTER_ID = '1vcQ8iIARrUS_L1mXcXFu3d6DWWZgqBESBXSm5FsFRKc'; // Kode Store, Nama Store, NAMA FRA, NAMA REGIONAL
+const MASTER_ID = '1vcQ8iIARrUS_L1mXcXFu3d6DWWZgqBESBXSm5FsFRKc';
 
 function teks(pesan, status) {
   return new Response(pesan, {
@@ -47,7 +46,6 @@ function pilihSumberDanTtl(url, env, nama) {
       throw new Error('__INVALID_MONTH__');
     }
 
-    // Prioritas 1: Link Publish to web CSV untuk tab 'Arsip' di Spreadsheet utama
     if (String(env.ARSIP_CSV_URL || '').trim()) {
       return {
         sumber: linkPublikasi(env.ARSIP_CSV_URL, 'ARSIP_CSV_URL'),
@@ -55,7 +53,6 @@ function pilihSumberDanTtl(url, env, nama) {
       };
     }
 
-    // Prioritas 2 (opsional): File arsip per tahun melalui ARSIP_IDS (contoh: 2026=ID_FILE)
     if (bln) {
       const id = petaArsip(env.ARSIP_IDS)[bln.slice(0, 4)];
       if (!id) return { kosong: true };
@@ -134,11 +131,11 @@ export async function tangani(request, env, nama, waitUntil) {
     const csvText = await asal.text();
 
     if (contentType.indexOf('text/html') >= 0 || /^\s*<!doctype html|<html/i.test(csvText)) {
-      return teks('Link mengembalikan halaman web, bukan CSV. Periksa pengaturan publikasi (Publish to web).', 502);
+      return teks('Link [' + nama + '] mengembalikan halaman web, bukan CSV. Periksa Publish to web.', 502);
     }
 
     if (!csvText || csvText.trim().length === 0) {
-      return teks('Data CSV kosong.', 502);
+      return teks('Data CSV [' + nama + '] kosong.', 502);
     }
 
     const simpan = new Response(csvText, {
@@ -155,8 +152,7 @@ export async function tangani(request, env, nama, waitUntil) {
     return kirim(csvText, false);
   } catch (e) {
     if (e && e.message === '__INVALID_MONTH__') {
-      return teks('Bulan tidak valid pada [' + nama + ']: ' + (url.searchParams.get('bln') || ''), 400);
-    }
+      return teks('Bulan tidak valid pada [' + nama + ']: ' + (new URL(request.url).searchParams.get('bln') || ''), 400);
     }
     return teks(e.message || String(e), 500);
   }
