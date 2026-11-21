@@ -4,5 +4,9 @@
   "compatibility_date": "2024-11-08",
   "assets": {
     "directory": "public"
+  },
+  "vars": {
+    "BON_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzoyAo4qV7QjRWpGaFN4J5rxhFdooht-clqnhqXsIoZ4evBnEwC07zxAMvQXzGh9pPPSG6KWWmTral/pub?gid=911660184&single=true&output=csv",
+    "ARSIP_CSV_URL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzoyAo4qV7QjRWpGaFN4J5rxhFdooht-clqnhqXsIoZ4evBnEwC07zxAMvQXzGh9pPPSG6KWWmTral/pub?gid=964359294&single=true&output=csv"
   }
 }
