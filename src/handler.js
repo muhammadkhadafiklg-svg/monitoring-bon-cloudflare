@@ -127,7 +127,7 @@ export async function tangani(request, env, nama, waitUntil) {
     });
 
     if (!asal.ok) {
-      return teks('Sumber data gagal dibaca (kode ' + asal.status + ').', 502);
+      return teks('Sumber data [' + nama + '] gagal dibaca (kode ' + asal.status + ').', 502);
     }
 
     const contentType = String(asal.headers.get('content-type') || '');
@@ -155,7 +155,8 @@ export async function tangani(request, env, nama, waitUntil) {
     return kirim(csvText, false);
   } catch (e) {
     if (e && e.message === '__INVALID_MONTH__') {
-      return teks('Bulan tidak valid.', 400);
+      return teks('Bulan tidak valid pada [' + nama + ']: ' + (url.searchParams.get('bln') || ''), 400);
+    }
     }
     return teks(e.message || String(e), 500);
   }
