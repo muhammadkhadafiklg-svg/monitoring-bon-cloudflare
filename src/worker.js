@@ -1,11 +1,22 @@
-// Pintu masuk Worker: /api/* ditangani Worker, selain itu disajikan sebagai file statis dari folder public.
 import { tangani } from './handler.js';
 
 export default {
   async fetch(request, env, ctx) {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Cache-Control'
+        }
+      });
+    }
+
     const url = new URL(request.url);
-    const m = url.pathname.match(/^\/api\/([a-z]+)$/);
-    if (m) return tangani(request, env, m[1], function (p) { ctx.waitUntil(p); });
-    return env.ASSETS.fetch(request);
+    const segmen = url.pathname.replace(/^\/+|\/+$/g, '').split('/');
+    const nama = segmen[0] === 'api' ? segmen[1] : segmen[0];
+
+    return tangani(request, env, nama, ctx.waitUntil.bind(ctx));
   }
 };
